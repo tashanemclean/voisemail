@@ -1,4 +1,5 @@
 "use client";
+
 import { useState } from "react";
 import {
 	Play,
@@ -827,6 +828,6 @@ const VoisemailLanding = () => {
 	);
 };
 
-export default async function Home() {
+export default function Home() {
 	<VoisemailLanding />;
 }
