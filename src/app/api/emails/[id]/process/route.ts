@@ -5,9 +5,11 @@ import { EmailService } from "@/lib/email-service";
 
 export async function POST(
 	request: Request,
-	{ params }: { params: { id: string } }
+	context: { params: Promise<{ id: string }> }
 ) {
 	try {
+		const { id } = await context.params; // ✅ await the params
+
 		const { userId: clerkId } = await auth();
 
 		if (!clerkId) {
@@ -17,9 +19,7 @@ export async function POST(
 			);
 		}
 
-		const user = await prisma.user.findUnique({
-			where: { clerkId },
-		});
+		const user = await prisma.user.findUnique({ where: { clerkId } });
 
 		if (!user) {
 			return NextResponse.json(
@@ -28,12 +28,8 @@ export async function POST(
 			);
 		}
 
-		// Use params.id directly, as it's the expected synchronous value.
 		const email = await prisma.email.findFirst({
-			where: {
-				id: params.id,
-				userId: user.id,
-			},
+			where: { id, userId: user.id },
 		});
 
 		if (!email) {
@@ -44,7 +40,7 @@ export async function POST(
 		}
 
 		const emailService = new EmailService();
-		const result = await emailService.processEmail(params.id);
+		const result = await emailService.processEmail(id);
 
 		return NextResponse.json(result);
 	} catch (error) {
