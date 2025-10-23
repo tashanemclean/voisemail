@@ -51,9 +51,8 @@ export async function POST(req: Request) {
 			data: {
 				clerkId: id,
 				email: email_addresses[0].email_address,
-				name: `${first_name || ""} ${last_name || ""}`.trim(),
-				plan: "FREE",
-				credits: 2, // Free trial: 2 videos (6 credits since 3 per generation)
+				firstName: (first_name || "").trim(),
+				lastName: (last_name || "").trim(),
 			},
 		});
 
@@ -67,7 +66,8 @@ export async function POST(req: Request) {
 			where: { clerkId: id },
 			data: {
 				email: email_addresses[0].email_address,
-				name: `${first_name || ""} ${last_name || ""}`.trim(),
+				firstName: (first_name || "").trim(),
+				lastName: (last_name || "").trim(),
 			},
 		});
 	}
