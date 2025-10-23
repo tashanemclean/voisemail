@@ -28,6 +28,7 @@ export async function POST(
 			);
 		}
 
+		// Use params.id directly, as it's the expected synchronous value.
 		const email = await prisma.email.findFirst({
 			where: {
 				id: params.id,
