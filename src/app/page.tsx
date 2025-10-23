@@ -829,5 +829,5 @@ const VoisemailLanding = () => {
 };
 
 export default function Home() {
-	<VoisemailLanding />;
+	return <VoisemailLanding />;
 }
