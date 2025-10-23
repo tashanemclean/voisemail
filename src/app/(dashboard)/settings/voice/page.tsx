@@ -4,9 +4,14 @@ import { useState, useEffect } from "react";
 import { Play, Pause, Settings, Save } from "lucide-react";
 
 export default function VoiceSettingsPage() {
-	const [voices, setVoices] = useState([]);
-	const [selectedVoice, setSelectedVoice] = useState(null);
-	const [playingVoice, setPlayingVoice] = useState(null);
+	const [voices, setVoices] = useState<
+		{ id: string; name: string; description: string }[]
+	>([]);
+	const [selectedVoice, setSelectedVoice] = useState<{
+		id: string;
+		name: string;
+	} | null>(null);
+	const [playingVoice, setPlayingVoice] = useState<string | null>(null);
 	const [settings, setSettings] = useState({
 		stability: 0.6,
 		similarityBoost: 0.8,
