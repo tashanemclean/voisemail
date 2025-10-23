@@ -16,6 +16,17 @@ import {
 	ChevronRight,
 } from "lucide-react";
 
+// ➡️ CLERK IMPORTS ADDED
+import {
+	SignInButton,
+	SignUpButton,
+	UserButton,
+	SignedIn,
+	SignedOut,
+	useUser,
+} from "@clerk/nextjs";
+// ⬅️ END CLERK IMPORTS
+
 // Mock voice data
 const availableVoices = [
 	{
@@ -165,6 +176,9 @@ const pricingPlans = [
 ];
 
 const VoisemailLanding = () => {
+	// Use Clerk hook to manage user state
+	const { isSignedIn } = useUser();
+
 	const [currentPage, setCurrentPage] = useState("landing");
 	const [selectedVoice, setSelectedVoice] = useState(availableVoices[0]);
 	const [playingVoice, setPlayingVoice] = useState<string | null>(null);
@@ -209,12 +223,37 @@ const VoisemailLanding = () => {
 						>
 							Pricing
 						</button>
-						<button className="text-purple-200 hover:text-white transition-colors">
-							Sign In
-						</button>
-						<button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-6 py-2 rounded-lg transition-all">
-							Get Started
-						</button>
+
+						{/* ➡️ CLERK NAV LINKS */}
+						<SignedIn>
+							<a
+								href="/dashboard"
+								className="text-purple-200 hover:text-white transition-colors"
+							>
+								Dashboard
+							</a>
+							<UserButton
+								afterSignOutUrl="/"
+								appearance={{
+									elements: {
+										userButtonAvatarBox: "w-8 h-8",
+									},
+								}}
+							/>
+						</SignedIn>
+						<SignedOut>
+							<SignInButton mode="modal">
+								<button className="text-purple-200 hover:text-white transition-colors">
+									Sign In
+								</button>
+							</SignInButton>
+							<SignUpButton mode="modal">
+								<button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-6 py-2 rounded-lg transition-all">
+									Get Started
+								</button>
+							</SignUpButton>
+						</SignedOut>
+						{/* ⬅️ END CLERK NAV LINKS */}
 					</div>
 				</div>
 			</nav>
@@ -238,15 +277,32 @@ const VoisemailLanding = () => {
 					summaries, smart insights, and intelligent filtering. Save
 					hours every week.
 				</p>
+
+				{/* ➡️ HERO CTA BUTTONS */}
 				<div className="flex justify-center gap-4">
-					<button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-8 py-4 rounded-lg text-lg font-semibold transition-all transform hover:scale-105 flex items-center gap-2">
-						Start Free Trial
-						<ChevronRight className="w-5 h-5" />
-					</button>
+					<SignedOut>
+						<SignUpButton mode="modal">
+							<button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-8 py-4 rounded-lg text-lg font-semibold transition-all transform hover:scale-105 flex items-center gap-2">
+								Start Free Trial
+								<ChevronRight className="w-5 h-5" />
+							</button>
+						</SignUpButton>
+					</SignedOut>
+					<SignedIn>
+						<a
+							href="/dashboard"
+							className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-8 py-4 rounded-lg text-lg font-semibold transition-all transform hover:scale-105 flex items-center gap-2"
+						>
+							Go to Dashboard
+							<ChevronRight className="w-5 h-5" />
+						</a>
+					</SignedIn>
+
 					<button className="bg-white/10 backdrop-blur-lg border border-white/20 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-white/20 transition-all">
 						Watch Demo
 					</button>
 				</div>
+				{/* ⬅️ END HERO CTA BUTTONS */}
 			</div>
 
 			{/* Companies Using Voisemail */}
@@ -378,6 +434,7 @@ const VoisemailLanding = () => {
 							className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20"
 						>
 							<div className="flex items-center gap-1 mb-4">
+								{/* Star Rating component is not defined, using inline logic */}
 								{[...Array(testimonial.rating)].map((_, i) => (
 									<Star
 										key={i}
@@ -419,12 +476,27 @@ const VoisemailLanding = () => {
 						Join thousands of professionals saving hours every week.
 						Start free today.
 					</p>
-					<button className="bg-white text-purple-600 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-purple-50 transition-all transform hover:scale-105">
-						Start Free Trial
-					</button>
-					<p className="text-purple-100 text-sm mt-4">
-						No credit card required • 14-day free trial
-					</p>
+
+					{/* ➡️ FINAL CTA BUTTON */}
+					<SignedOut>
+						<SignUpButton mode="modal">
+							<button className="bg-white text-purple-600 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-purple-50 transition-all transform hover:scale-105">
+								Start Free Trial
+							</button>
+						</SignUpButton>
+						<p className="text-purple-100 text-sm mt-4">
+							No credit card required • 14-day free trial
+						</p>
+					</SignedOut>
+					<SignedIn>
+						<a
+							href="/dashboard/billing"
+							className="bg-white text-purple-600 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-purple-50 transition-all transform hover:scale-105"
+						>
+							Manage Subscription
+						</a>
+					</SignedIn>
+					{/* ⬅️ END FINAL CTA BUTTON */}
 				</div>
 			</div>
 
@@ -463,9 +535,32 @@ const VoisemailLanding = () => {
 						>
 							Pricing
 						</button>
-						<button className="text-purple-200 hover:text-white transition-colors">
-							Sign In
-						</button>
+
+						{/* ➡️ CLERK NAV LINKS (Pricing Page) */}
+						<SignedIn>
+							<a
+								href="/dashboard"
+								className="text-purple-200 hover:text-white transition-colors"
+							>
+								Dashboard
+							</a>
+							<UserButton
+								afterSignOutUrl="/"
+								appearance={{
+									elements: {
+										userButtonAvatarBox: "w-8 h-8",
+									},
+								}}
+							/>
+						</SignedIn>
+						<SignedOut>
+							<SignInButton mode="modal">
+								<button className="text-purple-200 hover:text-white transition-colors">
+									Sign In
+								</button>
+							</SignInButton>
+						</SignedOut>
+						{/* ⬅️ END CLERK NAV LINKS (Pricing Page) */}
 					</div>
 				</div>
 			</nav>
@@ -512,15 +607,36 @@ const VoisemailLanding = () => {
 									/{plan.period}
 								</span>
 							</div>
-							<button
-								className={`w-full py-3 rounded-lg font-semibold transition-all mb-6 ${
-									plan.highlighted
-										? "bg-white text-purple-600 hover:bg-purple-50"
-										: "bg-purple-600 text-white hover:bg-purple-700"
-								}`}
-							>
-								{plan.cta}
-							</button>
+
+							{/* ➡️ PRICING CTA BUTTONS */}
+							<SignedOut>
+								<SignUpButton mode="modal">
+									<button
+										className={`w-full py-3 rounded-lg font-semibold transition-all mb-6 ${
+											plan.highlighted
+												? "bg-white text-purple-600 hover:bg-purple-50"
+												: "bg-purple-600 text-white hover:bg-purple-700"
+										}`}
+									>
+										{plan.cta}
+									</button>
+								</SignUpButton>
+							</SignedOut>
+							<SignedIn>
+								<a href="/dashboard/billing">
+									<button
+										className={`w-full py-3 rounded-lg font-semibold transition-all mb-6 ${
+											plan.highlighted
+												? "bg-white text-purple-600 hover:bg-purple-50"
+												: "bg-purple-600 text-white hover:bg-purple-700"
+										}`}
+									>
+										Upgrade/Manage Plan
+									</button>
+								</a>
+							</SignedIn>
+							{/* ⬅️ END PRICING CTA BUTTONS */}
+
 							<div className="space-y-3">
 								{plan.features.map((feature, i) => (
 									<div
@@ -575,6 +691,13 @@ const VoisemailLanding = () => {
 					</div>
 				</div>
 			</div>
+
+			{/* Footer */}
+			<footer className="container mx-auto px-4 py-8 border-t border-white/10">
+				<div className="text-center text-purple-300">
+					<p>© 2025 Voisemail. All rights reserved.</p>
+				</div>
+			</footer>
 		</div>
 	);
 
@@ -687,11 +810,12 @@ const VoisemailLanding = () => {
 												),
 											})
 										}
-										className="w-full h-2 bg-white/20 rounded-lg appearance-none cursor-pointer"
+										className="w-full h-2 bg-purple-700 rounded-lg appearance-none cursor-pointer"
+										style={{ accentColor: "#d8b4fe" }}
 									/>
-									<p className="text-purple-300 text-xs mt-1">
-										Higher = more consistent, Lower = more
-										expressive
+									<p className="text-purple-300 text-xs mt-2">
+										Higher stability reduces variation in
+										the voice.
 									</p>
 								</div>
 
@@ -720,10 +844,12 @@ const VoisemailLanding = () => {
 												),
 											})
 										}
-										className="w-full h-2 bg-white/20 rounded-lg appearance-none cursor-pointer"
+										className="w-full h-2 bg-purple-700 rounded-lg appearance-none cursor-pointer"
+										style={{ accentColor: "#d8b4fe" }}
 									/>
-									<p className="text-purple-300 text-xs mt-1">
-										How close to the original voice
+									<p className="text-purple-300 text-xs mt-2">
+										Adjusts how closely the voice matches
+										the chosen selection.
 									</p>
 								</div>
 
@@ -750,82 +876,71 @@ const VoisemailLanding = () => {
 												),
 											})
 										}
-										className="w-full h-2 bg-white/20 rounded-lg appearance-none cursor-pointer"
+										className="w-full h-2 bg-purple-700 rounded-lg appearance-none cursor-pointer"
+										style={{ accentColor: "#d8b4fe" }}
 									/>
-									<p className="text-purple-300 text-xs mt-1">
-										Amount of emotion and style
+									<p className="text-purple-300 text-xs mt-2">
+										Controls the accent and style of the
+										speech.
 									</p>
 								</div>
 							</div>
 						</div>
 
-						<div className="bg-white/10 backdrop-blur-lg rounded-2xl shadow-xl p-6 border border-white/20">
-							<h2 className="text-xl font-bold text-white mb-4">
-								Current Selection
+						{/* Selected Voice Preview */}
+						<div className="bg-gradient-to-r from-purple-700 to-pink-700 rounded-2xl p-6 border border-white/20">
+							<h2 className="text-xl font-bold text-white mb-3">
+								Active Voice
 							</h2>
-							<div className="bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl p-4">
-								<h3 className="text-white font-bold text-lg mb-2">
+							<div className="flex items-center justify-between">
+								<p className="text-2xl font-bold text-white">
 									{selectedVoice.name}
-								</h3>
-								<p className="text-purple-100 text-sm mb-3">
-									{selectedVoice.description} •{" "}
-									{selectedVoice.accent}
 								</p>
-								<div className="grid grid-cols-3 gap-2 text-xs">
-									<div className="bg-white/20 rounded p-2 text-center">
-										<p className="text-purple-100">
-											Stability
-										</p>
-										<p className="text-white font-bold">
-											{voiceSettings.stability.toFixed(2)}
-										</p>
-									</div>
-									<div className="bg-white/20 rounded p-2 text-center">
-										<p className="text-purple-100">
-											Similarity
-										</p>
-										<p className="text-white font-bold">
-											{voiceSettings.similarity_boost.toFixed(
-												2
-											)}
-										</p>
-									</div>
-									<div className="bg-white/20 rounded p-2 text-center">
-										<p className="text-purple-100">Style</p>
-										<p className="text-white font-bold">
-											{voiceSettings.style.toFixed(2)}
-										</p>
-									</div>
-								</div>
+								<button
+									onClick={() =>
+										handlePlayVoice(selectedVoice.id)
+									}
+									className="bg-white text-purple-600 p-3 rounded-full transition-all hover:scale-105"
+								>
+									{playingVoice === selectedVoice.id ? (
+										<Pause className="w-5 h-5" />
+									) : (
+										<Play className="w-5 h-5" />
+									)}
+								</button>
 							</div>
-							<button className="w-full mt-4 bg-white text-purple-600 hover:bg-purple-50 px-4 py-3 rounded-lg font-semibold transition-all">
-								Save Settings
-							</button>
 						</div>
 					</div>
 				</div>
+
+				{/* Save Button */}
+				<div className="mt-8 text-center">
+					<button className="bg-white text-purple-600 px-12 py-4 rounded-xl text-lg font-semibold hover:bg-purple-50 transition-all shadow-xl flex items-center justify-center mx-auto gap-2">
+						<Check className="w-5 h-5" />
+						Save Settings
+					</button>
+				</div>
 			</div>
+
+			{/* Footer - Copied from Landing */}
+			<footer className="container mx-auto px-4 py-8 border-t border-white/10 mt-12">
+				<div className="text-center text-purple-300">
+					<p>© 2025 Voisemail. All rights reserved.</p>
+				</div>
+			</footer>
 		</div>
 	);
 
-	return (
-		<div>
-			{currentPage === "landing" && renderLandingPage()}
-			{currentPage === "pricing" && renderPricingPage()}
-			{currentPage === "voice-settings" && renderVoiceSettings()}
-
-			{/* Floating Action Button */}
-			<div className="fixed bottom-6 right-6 flex flex-col gap-3">
-				<button
-					onClick={() => setCurrentPage("voice-settings")}
-					className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white p-4 rounded-full shadow-2xl transition-all transform hover:scale-110"
-					title="Voice Settings"
-				>
-					<Settings className="w-6 h-6" />
-				</button>
-			</div>
-		</div>
-	);
+	// Main render function to switch between pages
+	switch (currentPage) {
+		case "pricing":
+			return renderPricingPage();
+		case "voice-settings":
+			return renderVoiceSettings();
+		case "landing":
+		default:
+			return renderLandingPage();
+	}
 };
 
 export default function Home() {
