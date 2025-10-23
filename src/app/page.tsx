@@ -167,14 +167,14 @@ const pricingPlans = [
 const VoisemailLanding = () => {
 	const [currentPage, setCurrentPage] = useState("landing");
 	const [selectedVoice, setSelectedVoice] = useState(availableVoices[0]);
-	const [playingVoice, setPlayingVoice] = useState(null);
+	const [playingVoice, setPlayingVoice] = useState<string | null>(null);
 	const [voiceSettings, setVoiceSettings] = useState({
 		stability: 0.6,
 		similarity_boost: 0.8,
 		style: 0.2,
 	});
 
-	const handlePlayVoice = (voiceId) => {
+	const handlePlayVoice = (voiceId: string) => {
 		if (playingVoice === voiceId) {
 			setPlayingVoice(null);
 		} else {
