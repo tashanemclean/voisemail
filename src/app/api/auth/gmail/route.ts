@@ -13,6 +13,18 @@ export async function GET() {
 			);
 		}
 
+		if (
+			!process.env.GMAIL_CLIENT_ID ||
+			!process.env.GMAIL_CLIENT_SECRET ||
+			!process.env.GMAIL_REDIRECT_URI
+		) {
+			console.error("Gmail OAuth credentials not configured");
+			return NextResponse.json(
+				{ error: "Gmail OAuth not configured" },
+				{ status: 500 }
+			);
+		}
+
 		const oauth2Client = new google.auth.OAuth2(
 			process.env.GMAIL_CLIENT_ID,
 			process.env.GMAIL_CLIENT_SECRET,
@@ -27,13 +39,14 @@ export async function GET() {
 				"https://www.googleapis.com/auth/userinfo.email",
 			],
 			prompt: "consent",
+			state: clerkId, // Pass clerkId in state for verification
 		});
 
 		return NextResponse.json({ authUrl });
 	} catch (error) {
-		console.error("Error generating auth URL:", error);
+		console.error("Error generating Gmail auth URL:", error);
 		return NextResponse.json(
-			{ error: "Failed to generate auth URL" },
+			{ error: "Failed to generate authorization URL" },
 			{ status: 500 }
 		);
 	}

@@ -2,15 +2,11 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { EmailService } from "@/lib/email-service";
-import { google } from "googleapis";
-import { encrypt } from "@/lib/encryption"; // adjust to your path
 
 export async function GET(request: Request) {
 	try {
-		const url = new URL(request.url);
-		const code = url.searchParams.get("code");
-
 		const { userId: clerkId } = await auth();
+
 		if (!clerkId) {
 			return NextResponse.json(
 				{ error: "Unauthorized" },
@@ -18,7 +14,10 @@ export async function GET(request: Request) {
 			);
 		}
 
-		const user = await prisma.user.findUnique({ where: { clerkId } });
+		const user = await prisma.user.findUnique({
+			where: { clerkId },
+		});
+
 		if (!user) {
 			return NextResponse.json(
 				{ error: "User not found" },
@@ -26,71 +25,21 @@ export async function GET(request: Request) {
 			);
 		}
 
-		// --- If this is an OAuth callback (Gmail connection) ---
-		if (code) {
+		const { searchParams } = new URL(request.url);
+		const syncFirst = searchParams.get("sync") === "true";
+
+		// Optionally sync junk emails first
+		if (syncFirst) {
+			const emailService = new EmailService();
 			try {
-				const oauth2Client = new google.auth.OAuth2(
-					process.env.GMAIL_CLIENT_ID,
-					process.env.GMAIL_CLIENT_SECRET,
-					process.env.GMAIL_REDIRECT_URI
-				);
-
-				const { tokens } = await oauth2Client.getToken(code);
-				oauth2Client.setCredentials(tokens);
-
-				const gmail = google.gmail({
-					version: "v1",
-					auth: oauth2Client,
-				});
-				const profile = await gmail.users.getProfile({ userId: "me" });
-
-				await prisma.emailAccount.upsert({
-					where: {
-						userId_email: {
-							userId: user.id,
-							email: profile.data.emailAddress!,
-						},
-					},
-					update: {
-						accessToken: encrypt(tokens.access_token!),
-						refreshToken: tokens.refresh_token
-							? encrypt(tokens.refresh_token)
-							: null,
-						tokenExpiry: tokens.expiry_date
-							? new Date(tokens.expiry_date)
-							: null,
-						isActive: true,
-					},
-					create: {
-						userId: user.id,
-						provider: "gmail",
-						email: profile.data.emailAddress!,
-						accessToken: encrypt(tokens.access_token!),
-						refreshToken: tokens.refresh_token
-							? encrypt(tokens.refresh_token)
-							: null,
-						tokenExpiry: tokens.expiry_date
-							? new Date(tokens.expiry_date)
-							: null,
-						isActive: true,
-					},
-				});
-
-				return NextResponse.redirect(
-					new URL("/dashboard?connected=gmail", request.url)
-				);
+				await emailService.syncJunkEmails(user.id);
 			} catch (error) {
-				console.error("Error connecting Gmail:", error);
-				return NextResponse.redirect(
-					new URL("/dashboard?error=connection_failed", request.url)
-				);
+				console.error("Error syncing junk emails:", error);
+				// Continue even if sync fails
 			}
 		}
 
-		// --- Otherwise: Sync and return junk emails ---
-		const emailService = new EmailService();
-		await emailService.syncJunkEmails(user.id);
-
+		// Get junk emails that need review (not confirmed yet)
 		const junkEmails = await prisma.email.findMany({
 			where: {
 				userId: user.id,
@@ -100,11 +49,31 @@ export async function GET(request: Request) {
 			orderBy: {
 				receivedAt: "desc",
 			},
+			take: 50,
 		});
 
-		return NextResponse.json(junkEmails);
+		// Format the response
+		const formattedEmails = junkEmails.map((email) => ({
+			id: email.id,
+			externalId: email.externalId,
+			subject: email.subject,
+			from: email.from,
+			to: email.to,
+			body: email.body,
+			snippet: email.snippet,
+			receivedAt: email.receivedAt,
+			isJunk: email.isJunk,
+			confidence: email.confidence,
+			aiReason: email.aiReason,
+			aiRecommendation: email.isJunk ? "junk" : "legitimate",
+		}));
+
+		return NextResponse.json({
+			emails: formattedEmails,
+			total: formattedEmails.length,
+		});
 	} catch (error) {
-		console.error("Error in GET /emails route:", error);
+		console.error("Error fetching junk emails for review:", error);
 		return NextResponse.json(
 			{ error: "Failed to fetch junk emails" },
 			{ status: 500 }
