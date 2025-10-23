@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { prisma } from "./prisma";
+import { prisma } from "./db";
 
 export class StorageService {
 	private uploadDir: string;
