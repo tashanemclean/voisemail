@@ -377,8 +377,8 @@ export default function PrivacyPage() {
 									</p>
 									<p>
 										<strong>Address:</strong> Voisemail
-										Inc., 123 AI Street, San Francisco, CA
-										94102
+										Inc., 3559 Brooklyn ln, Lake Worth, FL
+										33461
 									</p>
 									<p>
 										<strong>Website:</strong>{" "}
