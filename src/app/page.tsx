@@ -504,6 +504,9 @@ const VoisemailLanding = () => {
 			<footer className="container mx-auto px-4 py-8 border-t border-white/10">
 				<div className="text-center text-purple-300">
 					<p>© 2025 Voisemail. All rights reserved.</p>
+					<a href="/privacy" className="text-purple-300">
+						Privacy policy
+					</a>
 				</div>
 			</footer>
 		</div>
@@ -696,6 +699,9 @@ const VoisemailLanding = () => {
 			<footer className="container mx-auto px-4 py-8 border-t border-white/10">
 				<div className="text-center text-purple-300">
 					<p>© 2025 Voisemail. All rights reserved.</p>
+					<a href="/privacy" className="text-purple-300">
+						Privacy policy
+					</a>
 				</div>
 			</footer>
 		</div>
