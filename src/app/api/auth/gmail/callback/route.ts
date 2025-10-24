@@ -23,15 +23,11 @@ export async function GET(request: Request) {
 		});
 
 		if (!user) {
-			return NextResponse.redirect(
-				new URL("/dashboard?error=user_not_found", request.url)
-			);
+			return NextResponse.redirect(new URL("/", request.url));
 		}
 
 		if (!code) {
-			return NextResponse.redirect(
-				new URL("/dashboard?error=no_code", request.url)
-			);
+			return NextResponse.redirect(new URL("/", request.url));
 		}
 
 		// --- 2. Exchange Code for Tokens ---
