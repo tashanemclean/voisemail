@@ -36,9 +36,9 @@ export async function GET(request: Request) {
 
 		// --- 2. Exchange Code for Tokens ---
 		const oauth2Client = new google.auth.OAuth2(
-			"1076369492895-34s78801tgccqvnke42rfk6brpu3oim2.apps.googleusercontent.com",
-			"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",
-			"https://www.voisemail.me/api/auth/gmail/callback"
+			process.env.GMAIL_CLIENT_ID,
+			process.env.GMAIL_CLIENT_SECRET,
+			process.env.GMAIL_REDIRECT_URI
 		);
 
 		const { tokens } = await oauth2Client.getToken(code);

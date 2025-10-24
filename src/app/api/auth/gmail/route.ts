@@ -44,9 +44,9 @@ export async function GET() {
 		});
 
 		const oauth2Client = new google.auth.OAuth2(
-			"1076369492895-34s78801tgccqvnke42rfk6brpu3oim2.apps.googleusercontent.com",
-			"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",
-			"https://www.voisemail.me/api/auth/gmail/callback"
+			config.gmail.clientId,
+			config.gmail.clientSecret,
+			config.gmail.redirectUri
 		);
 
 		const scopes = [
