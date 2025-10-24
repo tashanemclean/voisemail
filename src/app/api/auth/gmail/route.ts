@@ -5,14 +5,6 @@ import { config, validateConfig } from "@/lib/config";
 
 export async function GET() {
 	try {
-		console.error("--- ENV DEBUG START ---");
-		console.error("NODE_ENV:", process.env.NODE_ENV);
-		console.error("GMAIL_CLIENT_ID (raw):", process.env.GMAIL_CLIENT_ID);
-		console.error(
-			"CLERK_SECRET_KEY (check):",
-			process.env.CLERK_SECRET_KEY ? "LOADED" : "UNDEFINED"
-		);
-		console.error("--- ENV DEBUG END ---");
 		validateConfig();
 		const { userId: clerkId } = await auth();
 
@@ -52,9 +44,9 @@ export async function GET() {
 		});
 
 		const oauth2Client = new google.auth.OAuth2(
-			config.gmail.clientId,
-			config.gmail.clientSecret,
-			config.gmail.redirectUri
+			"1076369492895-34s78801tgccqvnke42rfk6brpu3oim2.apps.googleusercontent.com",
+			"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",
+			"https://www.voisemail.me/api/auth/gmail/callback"
 		);
 
 		const scopes = [
