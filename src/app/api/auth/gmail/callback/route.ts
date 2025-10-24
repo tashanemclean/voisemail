@@ -82,9 +82,7 @@ export async function GET(request: Request) {
 		});
 
 		// --- 5. Success Redirect ---
-		return NextResponse.redirect(
-			new URL("/dashboard?connected=gmail", request.url)
-		);
+		return NextResponse.redirect(new URL("/", request.url));
 	} catch (error) {
 		console.error("Error connecting Gmail:", error);
 		return NextResponse.redirect(
