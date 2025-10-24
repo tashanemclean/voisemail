@@ -12,7 +12,6 @@
 	"dependencies": {
 		"@clerk/nextjs": "^6.34.0",
 		"@prisma/client": "^6.18.0",
-		"@prisma/nextjs-monorepo-workaround-plugin": "^6.18.0",
 		"elevenlabs": "^1.59.0",
 		"googleapis": "^164.1.0",
 		"lucide-react": "^0.546.0",
