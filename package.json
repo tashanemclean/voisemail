@@ -4,12 +4,15 @@
 	"private": true,
 	"scripts": {
 		"dev": "next dev",
-		"build": "next build",
+		"build": "prisma generate && next build",
 		"start": "next start",
-		"lint": "eslint"
+		"lint": "eslint",
+		"postinstall": "prisma generate"
 	},
 	"dependencies": {
 		"@clerk/nextjs": "^6.34.0",
+		"@neondatabase/serverless": "^1.0.2",
+		"@prisma/adapter-neon": "^6.18.0",
 		"@prisma/client": "^6.18.0",
 		"elevenlabs": "^1.59.0",
 		"googleapis": "^164.1.0",
@@ -18,17 +21,19 @@
 		"openai": "^6.6.0",
 		"react": "19.2.0",
 		"react-dom": "19.2.0",
-		"svix": "^1.78.0"
+		"svix": "^1.78.0",
+		"ws": "^8.18.3"
 	},
 	"devDependencies": {
 		"@tailwindcss/postcss": "^4",
 		"@types/node": "^20",
 		"@types/react": "^19",
 		"@types/react-dom": "^19",
+		"@types/ws": "^8.18.1",
 		"eslint": "^9",
 		"eslint-config-next": "16.0.0",
+		"prisma": "^6.17.1",
 		"tailwindcss": "^4",
-		"typescript": "^5",
-		"prisma": "^6.17.1"
+		"typescript": "^5"
 	}
 }
