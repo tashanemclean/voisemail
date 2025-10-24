@@ -5,14 +5,14 @@ import { config, validateConfig } from "@/lib/config";
 
 export async function GET() {
 	try {
-		console.log("--- ENV DEBUG START ---");
-		console.log("NODE_ENV:", process.env.NODE_ENV);
-		console.log("GMAIL_CLIENT_ID (raw):", process.env.GMAIL_CLIENT_ID);
-		console.log(
+		console.error("--- ENV DEBUG START ---");
+		console.error("NODE_ENV:", process.env.NODE_ENV);
+		console.error("GMAIL_CLIENT_ID (raw):", process.env.GMAIL_CLIENT_ID);
+		console.error(
 			"CLERK_SECRET_KEY (check):",
 			process.env.CLERK_SECRET_KEY ? "LOADED" : "UNDEFINED"
 		);
-		console.log("--- ENV DEBUG END ---");
+		console.error("--- ENV DEBUG END ---");
 		validateConfig();
 		const { userId: clerkId } = await auth();
 
