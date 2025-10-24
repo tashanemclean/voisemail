@@ -23,11 +23,15 @@ export async function GET(request: Request) {
 		});
 
 		if (!user) {
-			return NextResponse.redirect(new URL("/", request.url));
+			return NextResponse.redirect(
+				new URL("/dashboard?error=user_not_found", request.url)
+			);
 		}
 
 		if (!code) {
-			return NextResponse.redirect(new URL("/", request.url));
+			return NextResponse.redirect(
+				new URL("/dashboard?error=no_code", request.url)
+			);
 		}
 
 		// --- 2. Exchange Code for Tokens ---
@@ -78,7 +82,9 @@ export async function GET(request: Request) {
 		});
 
 		// --- 5. Success Redirect ---
-		return NextResponse.redirect(new URL("/", request.url));
+		return NextResponse.redirect(
+			new URL("/dashboard?connected=gmail", request.url)
+		);
 	} catch (error) {
 		console.error("Error connecting Gmail:", error);
 		return NextResponse.redirect(
