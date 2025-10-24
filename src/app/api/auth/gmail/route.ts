@@ -1,10 +1,11 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { google } from "googleapis";
-import { config } from "@/lib/config";
+import { config, validateConfig } from "@/lib/config";
 
 export async function GET() {
 	try {
+		validateConfig();
 		const { userId: clerkId } = await auth();
 
 		if (!clerkId) {
