@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { google } from "googleapis";
+import { config } from "@/lib/config";
 
 export async function GET() {
 	try {
@@ -13,40 +14,68 @@ export async function GET() {
 			);
 		}
 
+		// Validate Gmail configuration
 		if (
-			!process.env.GMAIL_CLIENT_ID ||
-			!process.env.GMAIL_CLIENT_SECRET ||
-			!process.env.GMAIL_REDIRECT_URI
+			!config.gmail.clientId ||
+			!config.gmail.clientSecret ||
+			!config.gmail.redirectUri
 		) {
-			console.error("Gmail OAuth credentials not configured");
+			console.error("Gmail OAuth configuration missing:", {
+				hasClientId: !!config.gmail.clientId,
+				hasClientSecret: !!config.gmail.clientSecret,
+				hasRedirectUri: !!config.gmail.redirectUri,
+			});
+
 			return NextResponse.json(
-				{ error: "Gmail OAuth not configured" },
+				{
+					error: "Gmail OAuth not configured properly",
+					details:
+						"Missing client_id, client_secret, or redirect_uri",
+				},
 				{ status: 500 }
 			);
 		}
 
+		console.log("Gmail OAuth Config:", {
+			clientId: config.gmail.clientId.substring(0, 20) + "...",
+			redirectUri: config.gmail.redirectUri,
+			clerkId: clerkId.substring(0, 10) + "...",
+		});
+
 		const oauth2Client = new google.auth.OAuth2(
-			process.env.GMAIL_CLIENT_ID,
-			process.env.GMAIL_CLIENT_SECRET,
-			process.env.GMAIL_REDIRECT_URI
+			config.gmail.clientId,
+			config.gmail.clientSecret,
+			config.gmail.redirectUri
 		);
+
+		const scopes = [
+			"https://www.googleapis.com/auth/gmail.readonly",
+			"https://www.googleapis.com/auth/gmail.modify",
+			"https://www.googleapis.com/auth/userinfo.email",
+		];
 
 		const authUrl = oauth2Client.generateAuthUrl({
 			access_type: "offline",
-			scope: [
-				"https://www.googleapis.com/auth/gmail.readonly",
-				"https://www.googleapis.com/auth/gmail.modify",
-				"https://www.googleapis.com/auth/userinfo.email",
-			],
+			scope: scopes,
 			prompt: "consent",
-			state: clerkId, // Pass clerkId in state for verification
+			state: clerkId,
+			include_granted_scopes: true,
 		});
 
-		return NextResponse.json({ authUrl });
+		console.log("Generated auth URL successfully");
+
+		return NextResponse.json({
+			authUrl,
+			clientId: config.gmail.clientId,
+		});
 	} catch (error) {
 		console.error("Error generating Gmail auth URL:", error);
 		return NextResponse.json(
-			{ error: "Failed to generate authorization URL" },
+			{
+				error: "Failed to generate authorization URL",
+				message:
+					error instanceof Error ? error.message : "Unknown error",
+			},
 			{ status: 500 }
 		);
 	}
