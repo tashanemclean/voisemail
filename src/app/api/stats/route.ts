@@ -1,12 +1,11 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
-import { EmailService } from "@/lib/email-service";
+import { findUserByClerkId } from "@/lib/db/users";
+import { getEmailStats } from "@/lib/db/stats";
 
 export async function GET() {
 	try {
 		const { userId: clerkId } = await auth();
-
 		if (!clerkId) {
 			return NextResponse.json(
 				{ error: "Unauthorized" },
@@ -14,10 +13,7 @@ export async function GET() {
 			);
 		}
 
-		const user = await prisma.user.findUnique({
-			where: { clerkId },
-		});
-
+		const user = await findUserByClerkId(clerkId);
 		if (!user) {
 			return NextResponse.json(
 				{ error: "User not found" },
@@ -25,9 +21,7 @@ export async function GET() {
 			);
 		}
 
-		const emailService = new EmailService();
-		const stats = await emailService.getEmailStats(user.id);
-
+		const stats = await getEmailStats(user.id);
 		return NextResponse.json(stats);
 	} catch (error) {
 		console.error("Error fetching stats:", error);

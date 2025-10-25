@@ -1,8 +1,9 @@
 import { Webhook } from "svix";
 import { headers } from "next/headers";
 import { WebhookEvent } from "@clerk/nextjs/server";
-import { prisma } from "@/lib/db";
+import { createUser, updateUser, deleteUser } from "@/lib/db/users";
 import { NextResponse } from "next/server";
+import { User } from "@/lib/types";
 
 export async function POST(req: Request) {
 	const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
@@ -19,13 +20,12 @@ export async function POST(req: Request) {
 	const svix_signature = header.get("svix-signature");
 
 	if (!svix_id || !svix_timestamp || !svix_signature) {
-		console.error("Missing svix headers");
 		return new Response("Error occurred -- no svix headers", {
 			status: 400,
 		});
 	}
 
-	const payload = await req.text();
+	const payload = await req.json();
 	const body = JSON.stringify(payload);
 
 	const wh = new Webhook(WEBHOOK_SECRET);
@@ -45,71 +45,37 @@ export async function POST(req: Request) {
 	}
 
 	const eventType = evt.type;
-	console.log("Webhook event type:", eventType);
 
 	try {
 		if (eventType === "user.created") {
 			const { id, email_addresses, first_name, last_name, image_url } =
 				evt.data;
 
-			console.log("Creating user:", id);
-
-			await prisma.user.create({
-				data: {
-					clerkId: id,
-					email: email_addresses[0].email_address,
-					firstName: first_name || null,
-					lastName: last_name || null,
-					imageUrl: image_url || null,
-					subscription: {
-						create: {
-							plan: "starter",
-							status: "active",
-							emailsProcessed: 0,
-							emailsLimit: 50,
-							currentPeriodStart: new Date(),
-							currentPeriodEnd: new Date(
-								Date.now() + 30 * 24 * 60 * 60 * 1000
-							),
-							cancelAtPeriodEnd: false,
-						},
-					},
-				},
+			await createUser({
+				clerk_id: id,
+				email: email_addresses[0].email_address,
+				first_name: first_name || undefined,
+				last_name: last_name || undefined,
+				image_url: image_url || undefined,
 			});
-
-			console.log("User created successfully:", id);
 		}
 
 		if (eventType === "user.updated") {
 			const { id, email_addresses, first_name, last_name, image_url } =
 				evt.data;
 
-			console.log("Updating user:", id);
-
-			await prisma.user.update({
-				where: { clerkId: id },
-				data: {
-					email: email_addresses[0].email_address,
-					firstName: first_name || null,
-					lastName: last_name || null,
-					imageUrl: image_url || null,
-				},
-			});
-
-			console.log("User updated successfully:", id);
+			await updateUser(id, {
+				email: email_addresses[0].email_address,
+				first_name: first_name || null,
+				last_name: last_name || null,
+				image_url: image_url || null,
+			} as User);
 		}
 
 		if (eventType === "user.deleted") {
 			const { id } = evt.data;
-
 			if (id) {
-				console.log("Deleting user:", id);
-
-				await prisma.user.delete({
-					where: { clerkId: id },
-				});
-
-				console.log("User deleted successfully:", id);
+				await deleteUser(id);
 			}
 		}
 

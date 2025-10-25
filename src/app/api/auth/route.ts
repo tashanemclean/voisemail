@@ -1,6 +1,6 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
+import { findUserByClerkId, createUser } from "@/lib/db/users";
 
 export async function GET() {
 	try {
@@ -15,62 +15,30 @@ export async function GET() {
 
 		const clerkUser = await currentUser();
 
-		const dbUser = await prisma.user.findUnique({
-			where: { clerkId },
-			include: {
-				emailAccounts: {
-					select: {
-						id: true,
-						provider: true,
-						email: true,
-						isActive: true,
-						createdAt: true,
-					},
-				},
-				subscription: {
-					select: {
-						plan: true,
-						status: true,
-						emailsProcessed: true,
-						emailsLimit: true,
-						currentPeriodEnd: true,
-					},
-				},
-				voiceSettings: {
-					select: {
-						voiceId: true,
-						voiceName: true,
-					},
-				},
-			},
-		});
+		const user = await findUserByClerkId(clerkId);
 
-		if (!dbUser) {
+		if (!user) {
+			const now = new Date();
 			// User exists in Clerk but not in database - create them
-			const newUser = await prisma.user.create({
-				data: {
-					clerkId,
-					email: clerkUser?.emailAddresses[0]?.emailAddress || "",
-					firstName: clerkUser?.firstName || null,
-					lastName: clerkUser?.lastName || null,
-					imageUrl: clerkUser?.imageUrl || null,
-					subscription: {
-						create: {
-							plan: "starter",
-							status: "active",
-							emailsProcessed: 0,
-							emailsLimit: 50,
-							currentPeriodStart: new Date(),
-							currentPeriodEnd: new Date(
-								Date.now() + 30 * 24 * 60 * 60 * 1000
-							),
-						},
-					},
-				},
-				include: {
-					emailAccounts: true,
-					subscription: true,
-					voiceSettings: true,
+			const newUser = await createUser({
+				clerk_id: clerkId,
+				email: clerkUser?.emailAddresses[0]?.emailAddress || "",
+				first_name: clerkUser?.firstName || undefined,
+				last_name: clerkUser?.lastName || undefined,
+				image_url: clerkUser?.imageUrl || undefined,
+				subscription: {
+					user_id: clerkId,
+					plan: "starter",
+					status: "active",
+					emails_processed: 0,
+					emails_limit: 50,
+					current_period_start: new Date(),
+					current_period_end: new Date(
+						Date.now() + 30 * 24 * 60 * 60 * 1000
+					),
+					created_at: now,
+					updated_at: now,
+					cancel_at_period_end: false,
 				},
 			});
 
@@ -78,14 +46,14 @@ export async function GET() {
 				authenticated: true,
 				user: {
 					id: newUser.id,
-					clerkId: newUser.clerkId,
+					clerkId: newUser.clerk_id,
 					email: newUser.email,
-					firstName: newUser.firstName,
-					lastName: newUser.lastName,
-					imageUrl: newUser.imageUrl,
-					emailAccounts: newUser.emailAccounts,
+					firstName: newUser.first_name,
+					lastName: newUser.last_name,
+					imageUrl: newUser.image_url,
+					emailAccounts: newUser.email_accounts,
 					subscription: newUser.subscription,
-					voiceSettings: newUser.voiceSettings,
+					voiceSettings: newUser.voice_settings,
 				},
 			});
 		}
@@ -93,15 +61,15 @@ export async function GET() {
 		return NextResponse.json({
 			authenticated: true,
 			user: {
-				id: dbUser.id,
-				clerkId: dbUser.clerkId,
-				email: dbUser.email,
-				firstName: dbUser.firstName,
-				lastName: dbUser.lastName,
-				imageUrl: dbUser.imageUrl,
-				emailAccounts: dbUser.emailAccounts,
-				subscription: dbUser.subscription,
-				voiceSettings: dbUser.voiceSettings,
+				id: user.id,
+				clerkId: user.clerk_id,
+				email: user.email,
+				firstName: user.first_name,
+				lastName: user.last_name,
+				imageUrl: user.image_url,
+				emailAccounts: user.email_accounts,
+				subscription: user.subscription,
+				voiceSettings: user.voice_settings,
 			},
 		});
 	} catch (error) {

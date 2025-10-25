@@ -1,6 +1,10 @@
 import fs from "fs";
 import path from "path";
-import { prisma } from "./db";
+import {
+	createAudioFile,
+	deleteAudioFileByUrl,
+	findAudioFileByUrl,
+} from "./db/audio-files";
 
 export class StorageService {
 	private uploadDir: string;
@@ -31,15 +35,13 @@ export class StorageService {
 			fs.writeFileSync(filepath, buffer);
 
 			// Create database record
-			await prisma.audioFile.create({
-				data: {
-					userId,
-					emailId,
-					filename,
-					url: `/uploads/audio/${filename}`,
-					size: buffer.length,
-					mimeType: "audio/mpeg",
-				},
+			await createAudioFile({
+				userId,
+				emailId: emailId ?? null,
+				filename,
+				url: `/uploads/audio/${filename}`,
+				size: buffer.length,
+				mimeType: "audio/mpeg",
 			});
 
 			// Return public URL
@@ -64,9 +66,7 @@ export class StorageService {
 			}
 
 			// Delete database record
-			await prisma.audioFile.deleteMany({
-				where: { url },
-			});
+			await deleteAudioFileByUrl(url);
 		} catch (error) {
 			console.error("Error deleting audio file:", error);
 			throw new Error("Failed to delete audio file");
@@ -77,8 +77,6 @@ export class StorageService {
 	 * Get audio file info
 	 */
 	async getAudioFile(url: string) {
-		return await prisma.audioFile.findFirst({
-			where: { url },
-		});
+		return await findAudioFileByUrl(url);
 	}
 }

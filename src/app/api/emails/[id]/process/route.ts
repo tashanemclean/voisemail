@@ -1,17 +1,14 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
+import { findUserByClerkId } from "@/lib/db/users";
 import { EmailService } from "@/lib/email-service";
 
 export async function POST(
 	request: Request,
-	context: { params: Promise<{ id: string }> }
+	{ params }: { params: { id: string } }
 ) {
 	try {
-		const { id } = await context.params; // ✅ await the params
-
 		const { userId: clerkId } = await auth();
-
 		if (!clerkId) {
 			return NextResponse.json(
 				{ error: "Unauthorized" },
@@ -19,8 +16,7 @@ export async function POST(
 			);
 		}
 
-		const user = await prisma.user.findUnique({ where: { clerkId } });
-
+		const user = await findUserByClerkId(clerkId);
 		if (!user) {
 			return NextResponse.json(
 				{ error: "User not found" },
@@ -28,19 +24,8 @@ export async function POST(
 			);
 		}
 
-		const email = await prisma.email.findFirst({
-			where: { id, userId: user.id },
-		});
-
-		if (!email) {
-			return NextResponse.json(
-				{ error: "Email not found" },
-				{ status: 404 }
-			);
-		}
-
 		const emailService = new EmailService();
-		const result = await emailService.processEmail(id);
+		const result = await emailService.processEmail(params.id);
 
 		return NextResponse.json(result);
 	} catch (error) {

@@ -1,11 +1,11 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
+import { findUserByClerkId } from "@/lib/db/users";
+import { getEmailAccounts } from "@/lib/db/email-accounts";
 
 export async function GET() {
 	try {
 		const { userId: clerkId } = await auth();
-
 		if (!clerkId) {
 			return NextResponse.json(
 				{ error: "Unauthorized" },
@@ -13,25 +13,7 @@ export async function GET() {
 			);
 		}
 
-		const user = await prisma.user.findUnique({
-			where: { clerkId },
-			include: {
-				emailAccounts: {
-					select: {
-						id: true,
-						provider: true,
-						email: true,
-						isActive: true,
-						createdAt: true,
-						updatedAt: true,
-					},
-					orderBy: {
-						createdAt: "desc",
-					},
-				},
-			},
-		});
-
+		const user = await findUserByClerkId(clerkId);
 		if (!user) {
 			return NextResponse.json(
 				{ error: "User not found" },
@@ -39,9 +21,11 @@ export async function GET() {
 			);
 		}
 
+		const accounts = await getEmailAccounts(user.id);
+
 		return NextResponse.json({
-			accounts: user.emailAccounts,
-			total: user.emailAccounts.length,
+			accounts,
+			total: accounts.length,
 		});
 	} catch (error) {
 		console.error("Error fetching accounts:", error);

@@ -1,11 +1,11 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
+import { findUserByClerkId } from "@/lib/db/users";
+import { deleteEmailAccount, getEmailAccounts } from "@/lib/db/email-accounts";
 
 export async function POST(request: Request) {
 	try {
 		const { userId: clerkId } = await auth();
-
 		if (!clerkId) {
 			return NextResponse.json(
 				{ error: "Unauthorized" },
@@ -13,10 +13,7 @@ export async function POST(request: Request) {
 			);
 		}
 
-		const user = await prisma.user.findUnique({
-			where: { clerkId },
-		});
-
+		const user = await findUserByClerkId(clerkId);
 		if (!user) {
 			return NextResponse.json(
 				{ error: "User not found" },
@@ -34,13 +31,8 @@ export async function POST(request: Request) {
 			);
 		}
 
-		// Verify the account belongs to the user
-		const account = await prisma.emailAccount.findFirst({
-			where: {
-				id: accountId,
-				userId: user.id,
-			},
-		});
+		const accounts = await getEmailAccounts(user.id);
+		const account = accounts.find((a) => a.id === accountId);
 
 		if (!account) {
 			return NextResponse.json(
@@ -49,12 +41,7 @@ export async function POST(request: Request) {
 			);
 		}
 
-		// Delete the email account (this will cascade delete related emails)
-		await prisma.emailAccount.delete({
-			where: { id: accountId },
-		});
-
-		console.log(`Gmail account disconnected: ${account.email}`);
+		await deleteEmailAccount(accountId, user.id);
 
 		return NextResponse.json({
 			success: true,

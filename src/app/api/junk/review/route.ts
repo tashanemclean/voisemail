@@ -1,12 +1,12 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
+import { findUserByClerkId } from "@/lib/db/users";
+import { getJunkEmailsForReview } from "@/lib/db/emails";
 import { EmailService } from "@/lib/email-service";
 
 export async function GET(request: Request) {
 	try {
 		const { userId: clerkId } = await auth();
-
 		if (!clerkId) {
 			return NextResponse.json(
 				{ error: "Unauthorized" },
@@ -14,10 +14,7 @@ export async function GET(request: Request) {
 			);
 		}
 
-		const user = await prisma.user.findUnique({
-			where: { clerkId },
-		});
-
+		const user = await findUserByClerkId(clerkId);
 		if (!user) {
 			return NextResponse.json(
 				{ error: "User not found" },
@@ -28,44 +25,30 @@ export async function GET(request: Request) {
 		const { searchParams } = new URL(request.url);
 		const syncFirst = searchParams.get("sync") === "true";
 
-		// Optionally sync junk emails first
 		if (syncFirst) {
 			const emailService = new EmailService();
 			try {
 				await emailService.syncJunkEmails(user.id);
 			} catch (error) {
 				console.error("Error syncing junk emails:", error);
-				// Continue even if sync fails
 			}
 		}
 
-		// Get junk emails that need review (not confirmed yet)
-		const junkEmails = await prisma.email.findMany({
-			where: {
-				userId: user.id,
-				folder: "junk",
-				junkConfirmed: false,
-			},
-			orderBy: {
-				receivedAt: "desc",
-			},
-			take: 50,
-		});
+		const junkEmails = await getJunkEmailsForReview(user.id);
 
-		// Format the response
 		const formattedEmails = junkEmails.map((email) => ({
 			id: email.id,
-			externalId: email.externalId,
+			external_id: email.external_id,
 			subject: email.subject,
 			from: email.from,
 			to: email.to,
 			body: email.body,
 			snippet: email.snippet,
-			receivedAt: email.receivedAt,
-			isJunk: email.isJunk,
+			received_at: email.received_at,
+			is_junk: email.is_junk,
 			confidence: email.confidence,
-			aiReason: email.aiReason,
-			aiRecommendation: email.isJunk ? "junk" : "legitimate",
+			ai_reason: email.ai_reason,
+			aiRecommendation: email.is_junk ? "junk" : "legitimate",
 		}));
 
 		return NextResponse.json({
@@ -73,7 +56,7 @@ export async function GET(request: Request) {
 			total: formattedEmails.length,
 		});
 	} catch (error) {
-		console.error("Error fetching junk emails for review:", error);
+		console.error("Error fetching junk emails:", error);
 		return NextResponse.json(
 			{ error: "Failed to fetch junk emails" },
 			{ status: 500 }

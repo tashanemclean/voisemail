@@ -1,12 +1,11 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
+import { findUserByClerkId } from "@/lib/db/users";
 import { AIProcessor } from "@/lib/ai-processor";
 
 export async function POST(request: Request) {
 	try {
 		const { userId: clerkId } = await auth();
-
 		if (!clerkId) {
 			return NextResponse.json(
 				{ error: "Unauthorized" },
@@ -14,10 +13,7 @@ export async function POST(request: Request) {
 			);
 		}
 
-		const user = await prisma.user.findUnique({
-			where: { clerkId },
-		});
-
+		const user = await findUserByClerkId(clerkId);
 		if (!user) {
 			return NextResponse.json(
 				{ error: "User not found" },

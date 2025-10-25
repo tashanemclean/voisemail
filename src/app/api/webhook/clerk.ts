@@ -1,8 +1,9 @@
 import { Webhook } from "svix";
 import { headers } from "next/headers";
 import { WebhookEvent } from "@clerk/nextjs/server";
-import { prisma } from "@/lib/db";
+
 import { NextResponse } from "next/server";
+import { createUser, deleteUser, updateUser } from "@/lib/db/users";
 
 export async function POST(req: Request) {
 	const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
@@ -48,26 +49,27 @@ export async function POST(req: Request) {
 	if (eventType === "user.created") {
 		const { id, email_addresses, first_name, last_name, image_url } =
 			evt.data;
+		const now = new Date();
 
-		await prisma.user.create({
-			data: {
-				clerkId: id,
-				email: email_addresses[0].email_address,
-				firstName: first_name || null,
-				lastName: last_name || null,
-				imageUrl: image_url || null,
-				subscription: {
-					create: {
-						plan: "starter",
-						status: "active",
-						emailsProcessed: 0,
-						emailsLimit: 50,
-						currentPeriodStart: new Date(),
-						currentPeriodEnd: new Date(
-							Date.now() + 30 * 24 * 60 * 60 * 1000
-						), // 30 days
-					},
-				},
+		await createUser({
+			clerk_id: id,
+			email: email_addresses[0]?.email_address || "",
+			first_name: first_name || undefined,
+			last_name: last_name || undefined,
+			image_url: image_url || undefined,
+			subscription: {
+				user_id: id,
+				plan: "starter",
+				status: "active",
+				emails_processed: 0,
+				emails_limit: 50,
+				current_period_start: now,
+				current_period_end: new Date(
+					Date.now() + 30 * 24 * 60 * 60 * 1000
+				),
+				created_at: now,
+				updated_at: now,
+				cancel_at_period_end: false,
 			},
 		});
 	}
@@ -76,14 +78,11 @@ export async function POST(req: Request) {
 		const { id, email_addresses, first_name, last_name, image_url } =
 			evt.data;
 
-		await prisma.user.update({
-			where: { clerkId: id },
-			data: {
-				email: email_addresses[0].email_address,
-				firstName: first_name || null,
-				lastName: last_name || null,
-				imageUrl: image_url || null,
-			},
+		await updateUser(id, {
+			email: email_addresses[0].email_address,
+			first_name: first_name || null,
+			last_name: last_name || null,
+			image_url: image_url || null,
 		});
 	}
 
@@ -91,9 +90,7 @@ export async function POST(req: Request) {
 		const { id } = evt.data;
 
 		if (id) {
-			await prisma.user.delete({
-				where: { clerkId: id },
-			});
+			await deleteUser(id);
 		}
 	}
 

@@ -1,11 +1,14 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
+import { findUserByClerkId } from "@/lib/db/users";
+import {
+	getVoiceSettings,
+	createOrUpdateVoiceSettings,
+} from "@/lib/db/voice-settings";
 
 export async function GET() {
 	try {
 		const { userId: clerkId } = await auth();
-
 		if (!clerkId) {
 			return NextResponse.json(
 				{ error: "Unauthorized" },
@@ -13,11 +16,7 @@ export async function GET() {
 			);
 		}
 
-		const user = await prisma.user.findUnique({
-			where: { clerkId },
-			include: { voiceSettings: true },
-		});
-
+		const user = await findUserByClerkId(clerkId);
 		if (!user) {
 			return NextResponse.json(
 				{ error: "User not found" },
@@ -25,19 +24,21 @@ export async function GET() {
 			);
 		}
 
-		if (!user.voiceSettings) {
+		const settings = await getVoiceSettings(user.id);
+
+		if (!settings) {
 			return NextResponse.json({
-				voiceId: "21m00Tcm4TlvDq8ikWAM",
-				voiceName: "Rachel",
-				modelId: "eleven_turbo_v2_5",
+				voice_id: "21m00Tcm4TlvDq8ikWAM",
+				voice_name: "Rachel",
+				model_id: "eleven_turbo_v2_5",
 				stability: 0.6,
-				similarityBoost: 0.8,
+				similarity_boost: 0.8,
 				style: 0.2,
-				useSpeakerBoost: true,
+				use_speaker_boost: true,
 			});
 		}
 
-		return NextResponse.json(user.voiceSettings);
+		return NextResponse.json(settings);
 	} catch (error) {
 		console.error("Error fetching voice settings:", error);
 		return NextResponse.json(
@@ -50,7 +51,6 @@ export async function GET() {
 export async function PUT(request: Request) {
 	try {
 		const { userId: clerkId } = await auth();
-
 		if (!clerkId) {
 			return NextResponse.json(
 				{ error: "Unauthorized" },
@@ -58,10 +58,7 @@ export async function PUT(request: Request) {
 			);
 		}
 
-		const user = await prisma.user.findUnique({
-			where: { clerkId },
-		});
-
+		const user = await findUserByClerkId(clerkId);
 		if (!user) {
 			return NextResponse.json(
 				{ error: "User not found" },
@@ -104,30 +101,18 @@ export async function PUT(request: Request) {
 			);
 		}
 
-		const voiceSettings = await prisma.voiceSettings.upsert({
-			where: { userId: user.id },
-			update: {
-				voiceId,
-				voiceName,
-				modelId,
-				stability,
-				similarityBoost,
-				style,
-				useSpeakerBoost,
-			},
-			create: {
-				userId: user.id,
-				voiceId,
-				voiceName,
-				modelId,
-				stability,
-				similarityBoost,
-				style,
-				useSpeakerBoost,
-			},
+		const settings = await createOrUpdateVoiceSettings({
+			userId: user.id,
+			voiceId,
+			voiceName,
+			modelId,
+			stability,
+			similarityBoost,
+			style,
+			useSpeakerBoost,
 		});
 
-		return NextResponse.json(voiceSettings);
+		return NextResponse.json(settings);
 	} catch (error) {
 		console.error("Error updating voice settings:", error);
 		return NextResponse.json(

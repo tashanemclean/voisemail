@@ -1,15 +1,14 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
+import { findUserByClerkId } from "@/lib/db/users";
+import { getEmailById, deleteEmail } from "@/lib/db/emails";
 
 export async function GET(
 	request: Request,
-	context: { params: Promise<{ id: string }> }
+	{ params }: { params: { id: string } }
 ) {
-	const params = await context.params;
 	try {
 		const { userId: clerkId } = await auth();
-
 		if (!clerkId) {
 			return NextResponse.json(
 				{ error: "Unauthorized" },
@@ -17,10 +16,7 @@ export async function GET(
 			);
 		}
 
-		const user = await prisma.user.findUnique({
-			where: { clerkId },
-		});
-
+		const user = await findUserByClerkId(clerkId);
 		if (!user) {
 			return NextResponse.json(
 				{ error: "User not found" },
@@ -28,17 +24,7 @@ export async function GET(
 			);
 		}
 
-		const email = await prisma.email.findFirst({
-			where: {
-				id: params.id,
-				userId: user.id,
-			},
-			include: {
-				insights: true,
-				attachments: true,
-			},
-		});
-
+		const email = await getEmailById(params.id, user.id);
 		if (!email) {
 			return NextResponse.json(
 				{ error: "Email not found" },
@@ -58,12 +44,10 @@ export async function GET(
 
 export async function DELETE(
 	request: Request,
-	context: { params: Promise<{ id: string }> }
+	{ params }: { params: { id: string } }
 ) {
-	const params = await context.params;
 	try {
 		const { userId: clerkId } = await auth();
-
 		if (!clerkId) {
 			return NextResponse.json(
 				{ error: "Unauthorized" },
@@ -71,10 +55,7 @@ export async function DELETE(
 			);
 		}
 
-		const user = await prisma.user.findUnique({
-			where: { clerkId },
-		});
-
+		const user = await findUserByClerkId(clerkId);
 		if (!user) {
 			return NextResponse.json(
 				{ error: "User not found" },
@@ -82,11 +63,7 @@ export async function DELETE(
 			);
 		}
 
-		await prisma.email.delete({
-			where: {
-				id: params.id,
-			},
-		});
+		await deleteEmail(params.id, user.id);
 
 		return NextResponse.json({ success: true });
 	} catch (error) {

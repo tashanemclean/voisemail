@@ -5,7 +5,6 @@ import { AIProcessor } from "@/lib/ai-processor";
 export async function GET() {
 	try {
 		const { userId: clerkId } = await auth();
-
 		if (!clerkId) {
 			return NextResponse.json(
 				{ error: "Unauthorized" },

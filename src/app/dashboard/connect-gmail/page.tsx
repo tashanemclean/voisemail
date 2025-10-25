@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { AlertCircle, Mail, CheckCircle } from "lucide-react";
+import type { GmailTest } from "@/lib/types";
 
 export default function ConnectGmailPage() {
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
-	const [configTest, setConfigTest] = useState<any>(null);
+	const [configTest, setConfigTest] = useState<GmailTest | null>(null);
 
 	useEffect(() => {
 		// Test configuration on load
@@ -117,7 +118,7 @@ export default function ConnectGmailPage() {
 
 					<div className="mt-6 text-center text-sm text-purple-300">
 						<p>
-							We'll never read, store, or share your emails
+							We&apos;ll never read, store, or share your emails
 							without permission
 						</p>
 					</div>

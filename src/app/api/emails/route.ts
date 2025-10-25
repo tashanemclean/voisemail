@@ -1,11 +1,11 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
+import { findUserByClerkId } from "@/lib/db/users";
+import { getEmails } from "@/lib/db/emails";
 
 export async function GET(request: Request) {
 	try {
 		const { userId: clerkId } = await auth();
-
 		if (!clerkId) {
 			return NextResponse.json(
 				{ error: "Unauthorized" },
@@ -13,10 +13,7 @@ export async function GET(request: Request) {
 			);
 		}
 
-		const user = await prisma.user.findUnique({
-			where: { clerkId },
-		});
-
+		const user = await findUserByClerkId(clerkId);
 		if (!user) {
 			return NextResponse.json(
 				{ error: "User not found" },
@@ -28,40 +25,10 @@ export async function GET(request: Request) {
 		const folder = searchParams.get("folder") || "inbox";
 		const page = parseInt(searchParams.get("page") || "1");
 		const limit = parseInt(searchParams.get("limit") || "50");
-		const skip = (page - 1) * limit;
 
-		const [emails, total] = await Promise.all([
-			prisma.email.findMany({
-				where: {
-					userId: user.id,
-					folder,
-				},
-				include: {
-					insights: true,
-				},
-				orderBy: {
-					receivedAt: "desc",
-				},
-				take: limit,
-				skip,
-			}),
-			prisma.email.count({
-				where: {
-					userId: user.id,
-					folder,
-				},
-			}),
-		]);
+		const result = await getEmails(user.id, folder, page, limit);
 
-		return NextResponse.json({
-			emails,
-			pagination: {
-				page,
-				limit,
-				total,
-				pages: Math.ceil(total / limit),
-			},
-		});
+		return NextResponse.json(result);
 	} catch (error) {
 		console.error("Error fetching emails:", error);
 		return NextResponse.json(
