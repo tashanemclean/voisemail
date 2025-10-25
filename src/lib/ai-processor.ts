@@ -173,23 +173,27 @@ Return ONLY valid JSON.`;
 				use_speaker_boost: settings?.use_speaker_boost ?? true,
 			};
 
+			// Generate audio with ElevenLabs
 			const audio = await elevenlabs.textToSpeech.convert(voiceId, {
 				text,
 				model_id: modelId,
 				voice_settings: voiceSettings,
 			});
 
+			// Convert stream to buffer
 			const chunks: Uint8Array[] = [];
 			for await (const chunk of audio) {
 				chunks.push(chunk);
 			}
 			const buffer = Buffer.concat(chunks);
 
+			// Save to Supabase Storage (not filesystem!)
 			const url = await this.storageService.saveAudioFile(
 				buffer,
 				userId,
 				emailId
 			);
+
 			return url;
 		} catch (error) {
 			console.error("Error generating audio:", error);
