@@ -150,3 +150,14 @@ export interface GmailTest {
 	};
 	recommendation: string;
 }
+
+export interface Stats {
+	totalEmails: number;
+	processedEmails: number;
+	unprocessedEmails: number;
+	criticalEmails: number;
+	leads: number;
+	jobOffers: number;
+	junkToReview: number;
+	unreadEmails: number;
+}

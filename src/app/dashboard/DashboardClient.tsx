@@ -17,9 +17,9 @@ import {
 	Plus,
 } from "lucide-react";
 import { UserButton } from "@clerk/nextjs";
-import { DashboardClientProps, Stats } from "@/lib/types";
+import { Stats, User } from "@/lib/types";
 
-export default function DashboardClient({ user }: DashboardClientProps) {
+export default function DashboardClient({ user }: { user: User }) {
 	const searchParams = useSearchParams();
 	const [stats, setStats] = useState<Stats | null>(null);
 	const [loading, setLoading] = useState(true);
