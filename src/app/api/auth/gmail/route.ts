@@ -53,6 +53,7 @@ export async function GET() {
 			"https://www.googleapis.com/auth/gmail.readonly",
 			"https://www.googleapis.com/auth/gmail.modify",
 			"https://www.googleapis.com/auth/userinfo.email",
+			"https://www.googleapis.com/auth/userinfo.profile",
 		];
 
 		const authUrl = oauth2Client.generateAuthUrl({
