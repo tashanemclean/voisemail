@@ -13,14 +13,10 @@ import {
 	User,
 } from "lucide-react";
 import { UserButton } from "@clerk/nextjs";
-import { DbUser } from "@/lib/types";
+import { User as DbUser } from "@/lib/types";
 
-interface SettingsClientProps {
-	user: DbUser;
-}
-
-export default function SettingsClient({ user }: SettingsClientProps) {
-	const [accounts, setAccounts] = useState(user.emailAccounts);
+export default function SettingsClient({ user }: { user: DbUser }) {
+	const [accounts, setAccounts] = useState(user.email_accounts);
 	const [disconnecting, setDisconnecting] = useState<string | null>(null);
 	const [message, setMessage] = useState<{
 		type: "success" | "error";
@@ -49,7 +45,7 @@ export default function SettingsClient({ user }: SettingsClientProps) {
 			const data = await response.json();
 
 			if (response.ok) {
-				setAccounts(accounts.filter((acc) => acc.id !== accountId));
+				setAccounts(accounts?.filter((acc) => acc.id !== accountId));
 				setMessage({
 					type: "success",
 					text: `Successfully disconnected ${email}`,
