@@ -5,8 +5,9 @@ import { EmailService } from "@/lib/email-service";
 
 export async function POST(
 	request: Request,
-	{ params }: { params: { id: string } }
+	context: { params: Promise<{ id: string }> }
 ) {
+	const params = await context.params;
 	try {
 		const { userId: clerkId } = await auth();
 		if (!clerkId) {
@@ -25,7 +26,7 @@ export async function POST(
 		}
 
 		const emailService = new EmailService();
-		const result = await emailService.processEmail(params.id);
+		const result = await emailService.processEmail(params.id, user.id);
 
 		return NextResponse.json(result);
 	} catch (error) {
