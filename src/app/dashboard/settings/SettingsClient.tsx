@@ -181,7 +181,7 @@ export default function SettingsClient({ user }: { user: DbUser }) {
 								</Link>
 							</div>
 
-							{accounts.length === 0 ? (
+							{accounts?.length === 0 ? (
 								<div className="text-center py-12">
 									<Mail className="w-16 h-16 text-purple-400 mx-auto mb-4 opacity-50" />
 									<p className="text-purple-200 mb-4">
@@ -197,7 +197,7 @@ export default function SettingsClient({ user }: { user: DbUser }) {
 								</div>
 							) : (
 								<div className="space-y-4">
-									{accounts.map((account) => (
+									{accounts?.map((account) => (
 										<div
 											key={account.id}
 											className="bg-white/5 rounded-xl p-4 border border-white/10 flex items-center justify-between"
@@ -216,7 +216,7 @@ export default function SettingsClient({ user }: { user: DbUser }) {
 													<p className="text-purple-400 text-xs mt-1">
 														Connected{" "}
 														{new Date(
-															account.createdAt
+															account.created_at
 														).toLocaleDateString()}
 													</p>
 												</div>
@@ -280,8 +280,8 @@ export default function SettingsClient({ user }: { user: DbUser }) {
 											Emails Processed
 										</span>
 										<span className="text-white font-semibold">
-											{user.subscription.emailsProcessed}{" "}
-											/ {user.subscription.emailsLimit}
+											{user.subscription.emails_processed}{" "}
+											/ {user.subscription.emails_limit}
 										</span>
 									</div>
 									<div className="flex justify-between">
@@ -290,7 +290,7 @@ export default function SettingsClient({ user }: { user: DbUser }) {
 										</span>
 										<span className="text-white font-semibold">
 											{new Date(
-												user.subscription.currentPeriodEnd
+												user.subscription.current_period_end
 											).toLocaleDateString()}
 										</span>
 									</div>
