@@ -81,8 +81,8 @@ export default function DashboardClient({ user }: { user: User }) {
 									Dashboard
 								</h1>
 								<p className="text-purple-200">
-									Welcome back, {user.firstName || user.email}
-									!
+									Welcome back,{" "}
+									{user.first_name || user.email}!
 								</p>
 							</div>
 						</div>
@@ -123,7 +123,7 @@ export default function DashboardClient({ user }: { user: User }) {
 
 			{/* Main Content */}
 			<div className="container mx-auto px-4 pb-12">
-				{user.emailAccounts.length === 0 ? (
+				{user.email_accounts?.length === 0 ? (
 					// No email accounts connected
 					<div className="bg-white/10 backdrop-blur-lg rounded-2xl shadow-xl p-12 text-center border border-white/20">
 						<Mail className="w-16 h-16 text-purple-400 mx-auto mb-4" />
